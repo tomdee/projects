@@ -46,26 +46,29 @@ sub parseFilmDirectory
   #ID       - 7 
   #Total    = 100+4+3+3+7+((5*1)-1) = 121 (i.e. lots of space for genres, directors etc...)
 
-  my @lData = split(/,/, $lDir);
+#  my @lData = split(/,/, $lDir);
+if ($lDir =~ /^(.{1,100}?),(\d{4}?),(\d{1,3}),(\d\.\d),(\d{4,8})$/)
+{
+ my %lResult;
+  $lResult{title} = $1;#$lData[0];
+  $lResult{year} = $2;#$lData[1];
+  $lResult{duration} = $3;#$lData[2];
+  $lResult{rating} = $4;#$lData[3];
+  $lResult{id} = $5;#$lData[4];
   
-  my %lResult;
-  $lResult{title} = $lData[0];
   $lResult{title} =~ /^.{1,100}$/ or die ("Invalid title from directory: $lDir"); #Just check length - must be present.
-  
-  $lResult{year} = $lData[1];
-  $lResult{year} and $lResult{year} =~ /^\d{4}$/ or die ("Invalid year from directory: $lDir"); # EIther four digits or nothing
-  
-  $lResult{duration} = $lData[2];
+  $lResult{year} and $lResult{year} =~ /^\d{4}$/ or die ("Invalid year ($2) from directory: $lDir"); # EIther four digits or nothing
   $lResult{duration} and $lResult{duration} =~ /^\d{1,3}$/ or die ("Invalid duration from directory: $lDir"); #Can only be 1 - 3 digits
-  
-  $lResult{rating} = $lData[3];
   $lResult{rating} and $lResult{rating} =~ /^\d\.\d$/ or die ("Invalid rating from directory: $lDir"); #digit.digit
-  
-  $lResult{id} = $lData[4];
   $lResult{id} =~ /^\d{4,8}$/ or die ("Invalid id from directory: $lDir"); #Must be present - 4-8 digits
   
   return \%lResult;
 }
+else
+{
+die "Error parsing string";
+}
 
+}
 
 1;

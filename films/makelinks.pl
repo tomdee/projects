@@ -1,5 +1,6 @@
 use File::Basename;
 use lib::routines;
+use Getopt::Long;
 
 my @cProcessors = (
 					\&rating,
@@ -8,16 +9,36 @@ my @cProcessors = (
 my $cTargetBase = "/mnt/disk1/share/Video";
 #Process inputs
 #either loop over all directories or just process a single one.
-#done
+#donl
+my $gTest = 0;
+my $gHelp = 0;
+my $gAll = 0;
+my $gSingle = 0;
 
-if (scalar(@ARGV) == 1)
+GetOptions ('test' => \$gTest,
+			'all|a' => \$gAll, 
+			'help|h' => \$gHelp,
+			'single|s=s' => \$gSingle);
+$gHelp and showHelp();			
+$gAll or $gSingle or die "Must specifiy one of -a or -s\n";
+
+if ($gSingle)
 {
-	processDirectory($ARGV[0]);
+	processDirectory($gSingle);
 }
 else
 {
-	print "bad\n";
-	exit(1);
+    my $lSortedFilms = "$cTargetBase/Sorted Films"; 
+    opendir(SORTEDDIR, $lSortedFilms) or die "can't opendir $lSortedFilms: $!";
+    while (defined($file = readdir(SORTEDDIR))) 
+    {
+      next if $file =~ /^.$/;
+      next if $file =~ /^..$/;
+      print "Processing $lSortedFilms/$file\n";
+	processDirectory("$lSortedFilms/$file");
+    }
+
+    closedir(SORTEDDIR);
 }
 
 sub processDirectory
@@ -29,14 +50,14 @@ sub processDirectory
 	{
 		my $lTarget = &$lProcessor($lData);
 		#Make the target directory
-		print "The target directory is: $lTarget";
+		print "The target directory is: $lTarget\n";
 		#Link all files from within the source directory to the target directory...
 		
 		makeLink($lSource, $lTarget);
 	}
 }
 
-sub makeLink()
+sub makeLink
 {
 	my ($lSource, $lTarget) = @_;
 
@@ -54,16 +75,18 @@ sub makeLink()
     while (defined($file = readdir(DIR))) 
     {
       next if $file =~ /jpg$/;
-      next if $file =~ /html/;
+      next if $file =~ /html$/;
+      next if $file =~ /^.$/;
+      next if $file =~ /^..$/;
       
-      #link("$lSource/$file", "$lTarget/$file") or die "Couldn't create link from $lSource/$file to $lTarget/$file";
-      print "Creating link from $lSource/$file to $lTarget/$file";
+      link("$lSource/$file", "$lTarget/$file") or print "Couldn't create link from $lSource/$file to $lTarget/$file\n";
+      #print "Creating link from $lSource/$file to $lTarget/$file\n";
     }
 
     closedir(DIR);
 }
 
-sub rating()
+sub rating
 {
 	my %lData = %{$_[0]};
 	my $cRatingDir = "FilmsByRating";
@@ -72,7 +95,13 @@ sub rating()
     return $lName;
 }
 
-
+sub showHelp
+{
+print "GetOptions ('test' => \$gTest,
+			'all|a' => \$gAll, 
+			'help|h' => \$gHelp,
+			'single|s=s' => \$gSingle);\n";
+}
 #Help
 #Command line:
 # Take either a single film directory or a directory of film directories
