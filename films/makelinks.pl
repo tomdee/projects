@@ -7,12 +7,7 @@ my @cProcessors = (
 
 my $cTargetBase = "/mnt/disk1/share/Video";
 #Process inputs
-
-
 #either loop over all directories or just process a single one.
-
-
-
 #done
 
 if (scalar(@ARGV) == 1)
@@ -45,11 +40,27 @@ sub makeLink()
 {
 	my ($lSource, $lTarget) = @_;
 
-	# Check the source directory exists - exit if not
-	# Check if the target directory exists - create it if not.
-	# List all the files in the source directory
-	# Foreach file in source (excluding \d*.jpg and \d*.html)
-	#   create link from source to dest
+  if (! -d $lSource)
+  {
+    die "Missing source directory";
+  }
+  
+  if (! -d $lTarget)
+  {
+    mkdir $lTarget or die "Couldn't make directory $lTarget";
+  }
+
+    opendir(DIR, $lSource) or die "can't opendir $lSource: $!";
+    while (defined($file = readdir(DIR))) 
+    {
+      next if $file =~ /jpg$/;
+      next if $file =~ /html/;
+      
+      #link("$lSource/$file", "$lTarget/$file") or die "Couldn't create link from $lSource/$file to $lTarget/$file";
+      print "Creating link from $lSource/$file to $lTarget/$file";
+    }
+
+    closedir(DIR);
 }
 
 sub rating()
